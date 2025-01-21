@@ -4,7 +4,8 @@ locals {
   # フロントエンド向けALBのアクセスログ用バケット
   s3_name_alb_access_logs = "${var.env}-${var.project}-alb-access-logs"
   s3_name_lifecycle_rule  = "${var.env}-${var.project}-lifecycle-rule"
-  # s3_name_user_upload     = "${var.env}-${var.project}-user-upload"
+  # s3_name_waf_logs     = "${var.env}-${var.project}-user-upload"
+  s3_name_waf_logs = "aws-waf-logs-${var.env}-${var.project}"
 }
 
 # ------------------------------------
@@ -89,22 +90,74 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
   }
 }
 
+# ------------------------------------
+# WAFログ格納用バケット
+# ------------------------------------
+
+resource "aws_s3_bucket" "waf_logs" {
+  bucket = local.s3_name_waf_logs
+
+  tags = {
+    Name = local.s3_name_waf_logs
+  }
+}
+
+# パブリックブロックアクセス設定
+
+resource "aws_s3_bucket_public_access_block" "waf_logs" {
+  bucket                  = aws_s3_bucket.waf_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# 暗号化設定
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "waf_logs" {
+  bucket = aws_s3_bucket.waf_logs.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# ACL無効化
+
+resource "aws_s3_bucket_ownership_controls" "waf_logs" {
+  bucket = aws_s3_bucket.waf_logs.bucket
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+# バージョニング有効化
+resource "aws_s3_bucket_versioning" "waf_logs" {
+  bucket = aws_s3_bucket.waf_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 # # ------------------------------------
 # # アップロードファイル格納用バケット
 # # ------------------------------------
 
-# resource "aws_s3_bucket" "user_upload" {
-#   bucket = local.s3_name_user_upload
+# resource "aws_s3_bucket" "waf_logs" {
+#   bucket = local.s3_name_waf_logs
 
 #   tags = {
-#     Name = local.s3_name_user_upload
+#     Name = local.s3_name_waf_logs
 #   }
 # }
 
 # # パブリックブロックアクセス設定
 
-# resource "aws_s3_bucket_public_access_block" "user_upload" {
-#   bucket                  = aws_s3_bucket.user_upload.id
+# resource "aws_s3_bucket_public_access_block" "waf_logs" {
+#   bucket                  = aws_s3_bucket.waf_logs.id
 #   block_public_acls       = true
 #   block_public_policy     = true
 #   ignore_public_acls      = true
@@ -113,8 +166,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
 
 # # 暗号化設定
 
-# resource "aws_s3_bucket_server_side_encryption_configuration" "user_upload" {
-#   bucket = aws_s3_bucket.user_upload.bucket
+# resource "aws_s3_bucket_server_side_encryption_configuration" "waf_logs" {
+#   bucket = aws_s3_bucket.waf_logs.bucket
 
 #   rule {
 #     apply_server_side_encryption_by_default {
@@ -125,8 +178,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
 
 # # ACL無効化
 
-# resource "aws_s3_bucket_ownership_controls" "user_upload" {
-#   bucket = aws_s3_bucket.user_upload.bucket
+# resource "aws_s3_bucket_ownership_controls" "waf_logs" {
+#   bucket = aws_s3_bucket.waf_logs.bucket
 
 #   rule {
 #     object_ownership = "BucketOwnerEnforced"
@@ -134,8 +187,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
 # }
 
 # # バージョニング有効化
-# resource "aws_s3_bucket_versioning" "user_upload" {
-#   bucket = aws_s3_bucket.user_upload.id
+# resource "aws_s3_bucket_versioning" "waf_logs" {
+#   bucket = aws_s3_bucket.waf_logs.id
 #   versioning_configuration {
 #     status = "Enabled"
 #   }

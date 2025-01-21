@@ -23,3 +23,15 @@ provider "aws" {
     }
   }
 }
+
+provider "aws" {
+  alias = "n-virginia"
+  region = "us-east-1"
+  default_tags {
+    tags = {
+      managed_by = "terraform",
+      env        = "dev"
+    }
+  }
+}
+
