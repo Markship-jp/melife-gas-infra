@@ -4,8 +4,9 @@ locals {
   # フロントエンド向けALBのアクセスログ用バケット
   s3_name_alb_access_logs = "${var.env}-${var.project}-alb-access-logs"
   s3_name_lifecycle_rule  = "${var.env}-${var.project}-lifecycle-rule"
-  # s3_name_waf_logs     = "${var.env}-${var.project}-user-upload"
+  # s3_name_user_upload     = "${var.env}-${var.project}-user-upload"
   s3_name_waf_logs = "aws-waf-logs-${var.env}-${var.project}"
+  s3_name_cloudfront_access_logs = "${var.env}-${var.project}-cloudfront-access-logs"
 }
 
 # ------------------------------------
@@ -139,6 +140,97 @@ resource "aws_s3_bucket_versioning" "waf_logs" {
   bucket = aws_s3_bucket.waf_logs.id
   versioning_configuration {
     status = "Enabled"
+  }
+}
+
+# ライフサイクル設定
+resource "aws_s3_bucket_lifecycle_configuration" "waf_logs" {
+  bucket = aws_s3_bucket.waf_logs.bucket
+
+  rule {
+    status = "Enabled"
+    id     = local.s3_name_lifecycle_rule
+    transition {
+      days          = 60
+      storage_class = "STANDARD_IA"
+    }
+    expiration {
+      days = 365
+    }
+  }
+}
+
+
+# ------------------------------------
+# CloudFrontログ格納用バケット
+# ------------------------------------
+
+resource "aws_s3_bucket" "cloudfront_access_logs" {
+  bucket = local.s3_name_cloudfront_access_logs
+
+  tags = {
+    Name = local.s3_name_cloudfront_access_logs
+  }
+}
+
+# パブリックブロックアクセス設定
+
+resource "aws_s3_bucket_public_access_block" "cloudfront_access_logs" {
+  bucket                  = aws_s3_bucket.cloudfront_access_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# 暗号化設定
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_access_logs" {
+  bucket = aws_s3_bucket.cloudfront_access_logs.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# オブジェクト所有者の設定
+resource aws_s3_bucket_ownership_controls cloudfront_access_logs {
+    bucket = aws_s3_bucket.cloudfront_access_logs.id
+    rule {
+        object_ownership = "BucketOwnerPreferred"
+    }
+}
+# ACLを設定
+resource aws_s3_bucket_acl cloudfront_access_logs {
+    bucket = aws_s3_bucket.cloudfront_access_logs.id
+    acl    = "private"
+    depends_on = [ aws_s3_bucket_ownership_controls.cloudfront_access_logs ]
+}
+
+# バージョニング有効化
+resource "aws_s3_bucket_versioning" "cloudfront_access_logs" {
+  bucket = aws_s3_bucket.cloudfront_access_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# ライフサイクル設定
+resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_access_logs" {
+  bucket = aws_s3_bucket.cloudfront_access_logs.bucket
+
+  rule {
+    status = "Enabled"
+    id     = local.s3_name_lifecycle_rule
+    transition {
+      days          = 60
+      storage_class = "STANDARD_IA"
+    }
+    expiration {
+      days = 365
+    }
   }
 }
 

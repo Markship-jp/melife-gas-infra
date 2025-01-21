@@ -46,12 +46,11 @@ resource "aws_cloudfront_distribution" "distribution" {
     # minimum_protocol_version = "TLSv1"
   }
 
-#   logging_config {
-#     bucket = aws_s3_bucket.cloudfront_access_logs.bucket_domain_name
-#     prefix = "cloudfront/${var.env}-${var.system}-front_app/"
-
-#     include_cookies = true
-#   }
+  logging_config {
+    bucket = aws_s3_bucket.cloudfront_access_logs.bucket_domain_name
+    prefix = "${var.env}-${var.project}/"
+    include_cookies = true
+  }
 
 }
 
