@@ -2,6 +2,34 @@
 locals {
   cname               = [""]
   acm_certificate_arn = ""
+  vpc_origin_name     = "${var.env}-${var.project}-vpc-origin-alb-http"
+}
+
+resource "aws_cloudfront_vpc_origin" "private_alb_http" {
+  vpc_origin_endpoint_config {
+    name                   = local.vpc_origin_name
+    arn                    = aws_lb.main.arn
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "http-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+
+  }
+}
+
+data "aws_security_group" "vpc_origin_sg" {
+  name = "CloudFront-VPCOrigins-Service-SG"
+}
+resource "aws_vpc_security_group_ingress_rule" "vpc_origin" {
+  security_group_id            = aws_security_group.alb.id
+  from_port                    = 80
+  ip_protocol                  = "tcp"
+  to_port                      = 80
+  referenced_security_group_id = data.aws_security_group.vpc_origin_sg.id
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
@@ -12,12 +40,8 @@ resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name = aws_lb.main.dns_name
     origin_id   = "albOrigin"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+    vpc_origin_config {
+      vpc_origin_id = aws_cloudfront_vpc_origin.private_alb_http.id
     }
   }
 
@@ -47,8 +71,8 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   logging_config {
-    bucket = aws_s3_bucket.cloudfront_access_logs.bucket_domain_name
-    prefix = "${var.env}-${var.project}/"
+    bucket          = aws_s3_bucket.cloudfront_access_logs.bucket_domain_name
+    prefix          = "${var.env}-${var.project}/"
     include_cookies = true
   }
 

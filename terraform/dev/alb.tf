@@ -8,10 +8,10 @@ locals {
 # ALB
 resource "aws_lb" "main" {
   name               = local.alb_name_app
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = [aws_subnet.public_app_1a.id, aws_subnet.public_app_1c.id]
+  subnets            = [aws_subnet.private_app_1a.id, aws_subnet.private_app_1c.id]
   idle_timeout = 300
   access_logs {
     bucket  = aws_s3_bucket.alb_access_logs.id
