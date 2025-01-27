@@ -4,7 +4,7 @@ locals {
   # フロントエンド向けALBのアクセスログ用バケット
   s3_name_alb_access_logs = "${var.env}-${var.project}-alb-access-logs"
   s3_name_lifecycle_rule  = "${var.env}-${var.project}-lifecycle-rule"
-  # s3_name_user_upload     = "${var.env}-${var.project}-user-upload"
+  s3_name_storage     = "${var.env}-${var.project}-storage"
   s3_name_waf_logs = "aws-waf-logs-${var.env}-${var.project}"
   s3_name_cloudfront_access_logs = "${var.env}-${var.project}-cloudfront-access-logs"
 }
@@ -234,54 +234,54 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_access_logs" {
   }
 }
 
-# # ------------------------------------
-# # アップロードファイル格納用バケット
-# # ------------------------------------
+# ------------------------------------
+# アプリケーションストレージバケット
+# ------------------------------------
 
-# resource "aws_s3_bucket" "waf_logs" {
-#   bucket = local.s3_name_waf_logs
+resource "aws_s3_bucket" "storage" {
+  bucket = local.s3_name_storage
 
-#   tags = {
-#     Name = local.s3_name_waf_logs
-#   }
-# }
+  tags = {
+    Name = local.s3_name_storage
+  }
+}
 
-# # パブリックブロックアクセス設定
+# パブリックブロックアクセス設定
 
-# resource "aws_s3_bucket_public_access_block" "waf_logs" {
-#   bucket                  = aws_s3_bucket.waf_logs.id
-#   block_public_acls       = true
-#   block_public_policy     = true
-#   ignore_public_acls      = true
-#   restrict_public_buckets = true
-# }
+resource "aws_s3_bucket_public_access_block" "storage" {
+  bucket                  = aws_s3_bucket.storage.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
 
-# # 暗号化設定
+# 暗号化設定
 
-# resource "aws_s3_bucket_server_side_encryption_configuration" "waf_logs" {
-#   bucket = aws_s3_bucket.waf_logs.bucket
+resource "aws_s3_bucket_server_side_encryption_configuration" "storage" {
+  bucket = aws_s3_bucket.storage.bucket
 
-#   rule {
-#     apply_server_side_encryption_by_default {
-#       sse_algorithm = "AES256"
-#     }
-#   }
-# }
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
 
-# # ACL無効化
+# ACL無効化
 
-# resource "aws_s3_bucket_ownership_controls" "waf_logs" {
-#   bucket = aws_s3_bucket.waf_logs.bucket
+resource "aws_s3_bucket_ownership_controls" "storage" {
+  bucket = aws_s3_bucket.storage.bucket
 
-#   rule {
-#     object_ownership = "BucketOwnerEnforced"
-#   }
-# }
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
 
-# # バージョニング有効化
-# resource "aws_s3_bucket_versioning" "waf_logs" {
-#   bucket = aws_s3_bucket.waf_logs.id
-#   versioning_configuration {
-#     status = "Enabled"
-#   }
-# }
+# バージョニング有効化
+resource "aws_s3_bucket_versioning" "storage" {
+  bucket = aws_s3_bucket.storage.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
