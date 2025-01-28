@@ -35,7 +35,7 @@ resource "aws_ecs_task_definition" "main" {
   skip_destroy             = true
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture        = "ARM64"y
+    cpu_architecture        = "ARM64"
   }
   container_definitions = jsonencode([
     {

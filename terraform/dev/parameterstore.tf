@@ -74,15 +74,14 @@ resource "aws_ssm_parameter" "MAIL_FROM_ADDRESS" {
   }
 }
 
-resource "aws_ssm_parameter" "ZIPCODE_APIKEY" {
-  name  = "${local.parameterstore_path}/ZIPCODE_APIKEY"
+resource "aws_ssm_parameter" "ZIPCODE_API_KEY" {
+  name  = "${local.parameterstore_path}/ZIPCODE_API_KEY"
   type  = "SecureString"
   value = "PLACEHOLDER" # セキュアストリングの値はコンソールに設定するため仮の値を設定
   lifecycle {
     ignore_changes = [value]
   }
 }
-
 
 resource "aws_ssm_parameter" "PAYGENT_MERCHANT_ID" {
   name  = "${local.parameterstore_path}/PAYGENT_MERCHANT_ID"
