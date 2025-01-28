@@ -1,6 +1,6 @@
 locals {
   ecs_cluster_name               = "${var.env}-${var.project}-ecs-cluster"
-  container_image_uri            = "${aws_ecr_repository.main.repository_url}:dev-melife-gas-20250601-25"
+  container_image_uri            = "${aws_ecr_repository.main.repository_url}:dev-melife-gas-202501_28"
   task_definition_name           = "${var.env}-${var.project}-ecs-definition"
   cpu                            = 1024
   memory                         = 2048
@@ -32,9 +32,10 @@ resource "aws_ecs_task_definition" "main" {
   memory                   = local.memory
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
+  skip_destroy             = true
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture        = "ARM64"
+    cpu_architecture        = "ARM64"y
   }
   container_definitions = jsonencode([
     {
@@ -84,6 +85,54 @@ resource "aws_ecs_task_definition" "main" {
           name      = "ZIPCODE_APIKEY"
           valueFrom = "${local.parameterstore_arn}/ZIPCODE_APIKEY"
         },
+        {
+          name      = "PAYGENT_MERCHANT_ID"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_MERCHANT_ID"
+        },
+        {
+          name      = "PAYGENT_MERCHANT_NAME"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_MERCHANT_NAME"
+        },
+        {
+          name      = "PAYGENT_HASH_KEY"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_HASH_KEY"
+        },
+        {
+          name      = "PAYGENT_COMPANY_NAME"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_COMPANY_NAME"
+        },
+        {
+          name      = "PAYGENT_LINK_URL"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_LINK_URL"
+        },
+        {
+          name      = "PAYGENT_CONNECT_ID"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_CONNECT_ID"
+        },
+        {
+          name      = "PAYGENT_CONNECT_PASSWORD"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_CONNECT_PASSWORD"
+        },
+        {
+          name      = "PAYGENT_CONNECT_VERSION"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_CONNECT_VERSION"
+        },
+        {
+          name      = "PAYGENT_PFX_PASSWORD"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_PFX_PASSWORD"
+        },
+        {
+          name      = "PAYGENT_PFX_KEY"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_PFX_KEY"
+        },
+        {
+          name      = "PAYGENT_MODULE_CONNECT_URL"
+          valueFrom = "${local.parameterstore_arn}/PAYGENT_MODULE_CONNECT_URL"
+        },
+        {
+          name      = "AWS_DOWNLOAD_BUCKET_NAME"
+          valueFrom = "${local.parameterstore_arn}/AWS_DOWNLOAD_BUCKET_NAME"
+        }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -297,27 +346,27 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
-# resource "aws_iam_policy" "ecs_s3_policy" {
-#   name = local.ecs_transferfamily_policy_name
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = [
-#           "s3:ListBucket",
-#           "s3:GetObject",
-#           "s3:DeleteObject",
-#           "s3:PutObject"
-#         ],
-#         Effect = "Allow",
-#         Resource = [
-#           "${aws_s3_bucket.xxxx.arn}",
-#           "${aws_s3_bucket.sftp-xxxx.arn}/*"
-#         ]
-#       }
-#     ]
-#   })
-# }
+resource "aws_iam_policy" "ecs_s3_policy" {
+  name = local.ecs_transferfamily_policy_name
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:PutObject"
+        ],
+        Effect = "Allow",
+        Resource = [
+          "${aws_s3_bucket.storage.arn}",
+          "${aws_s3_bucket.storage.arn}/*"
+        ]
+      }
+    ]
+  })
+}
 
 
 resource "aws_iam_role_policy_attachment" "ecs_exec_policy_attachment" {
@@ -325,10 +374,10 @@ resource "aws_iam_role_policy_attachment" "ecs_exec_policy_attachment" {
   policy_arn = aws_iam_policy.ecs_exec_policy.arn
 }
 
-# resource "aws_iam_role_policy_attachment" "ecs_s3_policy_attachment" {
-#   role       = aws_iam_role.ecs_task_role.name
-#   policy_arn = aws_iam_policy.ecs_s3_policy.arn
-# }
+resource "aws_iam_role_policy_attachment" "ecs_s3_policy_attachment" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_s3_policy.arn
+}
 
 
 resource "aws_iam_role_policy_attachment" "ecs_task_policy" {
