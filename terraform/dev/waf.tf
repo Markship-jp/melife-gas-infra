@@ -9,7 +9,9 @@ locals {
     "210.170.191.42/32",
     "153.242.120.136/32",
     "101.102.168.242/32",
-    "210.136.82.2/32"
+    "210.136.82.2/32",
+    "172.104.86.145/32",
+    "61.23.154.169/32"
   ]
   api_webacl_name        = "${var.env}-${var.project}-api-webacl"
   cloudfront_webacl_name = "${var.env}-${var.project}-cloudfront-webacl"
