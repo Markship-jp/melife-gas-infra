@@ -16,7 +16,8 @@
         {
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::codepipeline-ap-northeast-1-*"
+                "${S3_BUCKET_ARN}",
+                "${S3_BUCKET_ARN}/*"
             ],
             "Action": [
                 "s3:PutObject",

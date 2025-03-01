@@ -21,6 +21,7 @@ resource "aws_iam_policy" "codebuild_build_policy" {
   policy = templatefile("./file/codebuild_build_policy.json.tpl", {
     AWS_ACCOUNT_ID    = data.aws_caller_identity.current.account_id
     BUILDPROJECT_NAME = aws_codebuild_project.app.name
+    S3_BUCKET_ARN    = aws_s3_bucket.pipeline.arn
   })
 }
 
