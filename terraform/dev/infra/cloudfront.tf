@@ -1,7 +1,7 @@
 
 locals {
-  cname               = [""]
-  acm_certificate_arn = ""
+  cname               = ["${var.domain_name}", "www.${var.domain_name}"]
+  acm_certificate_arn = aws_acm_certificate.n-virginia.arn
   vpc_origin_name     = "${var.env}-${var.project}-vpc-origin-alb-http"
 }
 
@@ -34,7 +34,7 @@ resource "aws_vpc_security_group_ingress_rule" "vpc_origin" {
 
 resource "aws_cloudfront_distribution" "distribution" {
   enabled = true
-  #   aliases             = local.cname
+  aliases             = local.cname
   web_acl_id = aws_wafv2_web_acl.cloudfront.arn
 
   origin {
@@ -64,10 +64,10 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true # ACMの証明書を使用する場合はfalseにする
-    # acm_certificate_arn      = local.acm_certificate_arn
-    # ssl_support_method       = "sni-only"
-    # minimum_protocol_version = "TLSv1"
+    cloudfront_default_certificate = false # ACMの証明書を使用する場合はfalseにする
+    acm_certificate_arn      = local.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   logging_config {
