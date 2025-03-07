@@ -1,33 +1,11 @@
-# Route53でドメイン取得時に自動でホストゾーンが作成されるため、importする
-import {
-  to = aws_route53_zone.main
-  id = "Z09646894140W7ISTVS4"
-}
-
 resource "aws_route53_zone" "main" {
   name = var.domain_name
   tags = {
     Name = "${var.env}-${var.project}-hostzone"
   }
 }
-
 output "name_servers" {
   value = aws_route53_zone.main.name_servers
-}
-# -----------------------------
-# サブドメイン（stg）の設定
-# -----------------------------
-resource "aws_route53_record" "stg_ns" {
-  zone_id = aws_route53_zone.main.id
-  name    = "stg.ana-gas.com"
-  type    = "NS"
-  ttl     = "300"
-  records = [
-    "ns-1087.awsdns-07.org",
-    "ns-2009.awsdns-59.co.uk",
-    "ns-204.awsdns-25.com",
-    "ns-763.awsdns-31.net"
-  ]
 }
 
 # # -----------------------------
