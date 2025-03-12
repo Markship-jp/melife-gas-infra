@@ -30,6 +30,22 @@ resource "aws_route53_record" "stg_ns" {
   ]
 }
 
+# -----------------------------
+# サブドメイン（dev）の設定
+# -----------------------------
+resource "aws_route53_record" "dev_ns" {
+  zone_id = aws_route53_zone.main.id
+  name    = "dev.ana-gas.com"
+  type    = "NS"
+  ttl     = "300"
+  records = [
+    "ns-308.awsdns-38.com",
+    "ns-1515.awsdns-61.org",
+    "ns-783.awsdns-33.net",
+    "ns-1543.awsdns-00.co.uk"
+  ]
+}
+
 # # -----------------------------
 # # Cert validation
 # # -----------------------------

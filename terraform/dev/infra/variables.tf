@@ -9,7 +9,7 @@ variable "project" {
 }
 
 variable "domain_name" {
-  default = "dev.acomic.co.jp" # 一時的にアコミックのドメインを使用する
+  default = "dev.ana-gas.com"
 }
 
 # Network(環境毎に値が変わる点に留意すること)
