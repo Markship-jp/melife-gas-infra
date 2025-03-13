@@ -194,3 +194,12 @@ resource "aws_ssm_parameter" "AWS_DOWNLOAD_BUCKET_NAME" {
     ignore_changes = [value]
   }
 }
+
+resource "aws_ssm_parameter" "ZIPCODE_APIKEY" {
+  name  = "${local.parameterstore_path}/ZIPCODE_APIKEY"
+  type  = "SecureString"
+  value = "PLACEHOLDER" # セキュアストリングの値はコンソールに設定するため仮の値を設定
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

@@ -6,7 +6,7 @@ locals {
   memory                         = 2048
   container_name                 = "${var.env}-${var.project}-ecs-container"
   ecs_service_name               = "${var.env}-${var.project}-ecs-service"
-  desired_count                  = 0
+  desired_count                  = 1
   max_count                      = 1
   min_count                      = 1
   ecs_task_role                  = "${var.env}-${var.project}-ecs-task-role"
@@ -132,6 +132,30 @@ resource "aws_ecs_task_definition" "main" {
         {
           name      = "AWS_DOWNLOAD_BUCKET_NAME"
           valueFrom = "${local.parameterstore_arn}/AWS_DOWNLOAD_BUCKET_NAME"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_ENDPOINT"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ORDER_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_SYSTEM_ENDPOINT"
+          valueFrom = "${local.parameterstore_arn}/KUMO_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_USERNAME"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ORDER_SYSTEM_USERNAME"
+        },
+        {
+          name      = "KUMO_COMPANY_ID"
+          valueFrom = "${local.parameterstore_arn}/KUMO_COMPANY_ID"
+        },
+        {
+          name      = "KUMO_TENANT_ID"
+          valueFrom = "${local.parameterstore_arn}/KUMO_TENANT_ID"
+        },
+        {
+          name      = "KUMO_ID_CODE"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ID_CODE"
         }
       ]
       logConfiguration = {
