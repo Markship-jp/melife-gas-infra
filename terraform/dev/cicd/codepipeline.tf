@@ -93,3 +93,50 @@ resource "aws_codepipeline" "my_app_pipeline" {
     }
   }
 }
+
+resource "aws_codepipeline" "batch_app_pipeline" {
+  name     = "${var.env}-${var.project}-batch-pipeline"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    type     = "S3"
+    location = aws_s3_bucket.pipeline.bucket
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        FullRepositoryId = var.github_repository_id
+        BranchName       = var.branch_name
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["source_output"]
+      output_artifacts = ["build_output"]
+
+      configuration = {
+        ProjectName = local.batch_buildprojec_name
+      }
+    }
+  }
+}
