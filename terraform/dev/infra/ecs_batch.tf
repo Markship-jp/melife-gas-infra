@@ -38,8 +38,9 @@ resource "aws_ecs_task_definition" "batch" {
       name      = local.batch_container_name
       image     = local.batch_container_image_uri
       essential = true
+      command   = ["node", "./dist/services/src/cli.js", "hello-world"]
       secrets = [
-       {
+        {
           name      = "DATABASE_URL"
           valueFrom = "${local.parameterstore_arn}/DATABASE_URL"
         },
@@ -72,7 +73,7 @@ resource "aws_ecs_task_definition" "batch" {
           valueFrom = "${local.parameterstore_arn}/MAIL_FROM_ADDRESS"
         },
         {
-          name      = "ZIPCODE_APIKEY"
+          name      = "ZIPCODE_API_KEY"
           valueFrom = "${local.parameterstore_arn}/ZIPCODE_APIKEY"
         },
         {
@@ -122,6 +123,30 @@ resource "aws_ecs_task_definition" "batch" {
         {
           name      = "AWS_DOWNLOAD_BUCKET_NAME"
           valueFrom = "${local.parameterstore_arn}/AWS_DOWNLOAD_BUCKET_NAME"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_ENDPOINT"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ORDER_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_SYSTEM_ENDPOINT"
+          valueFrom = "${local.parameterstore_arn}/KUMO_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_USERNAME"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ORDER_SYSTEM_USERNAME"
+        },
+        {
+          name      = "KUMO_COMPANY_ID"
+          valueFrom = "${local.parameterstore_arn}/KUMO_COMPANY_ID"
+        },
+        {
+          name      = "KUMO_TENANT_ID"
+          valueFrom = "${local.parameterstore_arn}/KUMO_TENANT_ID"
+        },
+        {
+          name      = "KUMO_ID_CODE"
+          valueFrom = "${local.parameterstore_arn}/KUMO_ID_CODE"
         }
       ]
       logConfiguration = {
@@ -310,9 +335,9 @@ resource "aws_scheduler_schedule" "batch_daily" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 0 * * ? *)" # 毎日午前0時（UTC）に実行
+  schedule_expression = "cron(0 12 * * ? *)" # 毎日午後12時（UTC）に実行
   schedule_expression_timezone = "UTC"
-  state = "DISABLED"
+  state = "ENABLED"
   target {
     arn      = aws_ecs_cluster.batch.arn
     role_arn = aws_iam_role.batch_eventbridge_role.arn
