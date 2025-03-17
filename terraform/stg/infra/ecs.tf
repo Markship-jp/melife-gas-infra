@@ -82,7 +82,7 @@ resource "aws_ecs_task_definition" "main" {
           valueFrom = "${local.parameterstore_arn}/MAIL_FROM_ADDRESS"
         },
         {
-          name      = "ZIPCODE_APIKEY"
+          name      = "ZIPCODE_API_KEY"
           valueFrom = "${local.parameterstore_arn}/ZIPCODE_APIKEY"
         },
         {
