@@ -74,7 +74,7 @@ resource "aws_ecs_task_definition" "batch" {
         },
         {
           name      = "ZIPCODE_API_KEY"
-          valueFrom = "${local.parameterstore_arn}/ZIPCODE_APIKEY"
+          valueFrom = "${local.parameterstore_arn}/ZIPCODE_API_KEY"
         },
         {
           name      = "PAYGENT_MERCHANT_ID"
@@ -143,10 +143,6 @@ resource "aws_ecs_task_definition" "batch" {
         {
           name      = "KUMO_TENANT_ID"
           valueFrom = "${local.parameterstore_arn}/KUMO_TENANT_ID"
-        },
-        {
-          name      = "KUMO_ID_CODE"
-          valueFrom = "${local.parameterstore_arn}/KUMO_ID_CODE"
         }
       ]
       logConfiguration = {
@@ -335,8 +331,8 @@ resource "aws_scheduler_schedule" "batch_daily" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 12 * * ? *)" # 毎日午後12時（UTC）に実行
-  schedule_expression_timezone = "UTC"
+  schedule_expression = "cron(0 12 * * ? *)" # 毎日午後12時0分（日本時間）に実行
+  schedule_expression_timezone = "Asia/Tokyo"
   state = "ENABLED"
   target {
     arn      = aws_ecs_cluster.batch.arn

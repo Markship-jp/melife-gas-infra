@@ -5,6 +5,7 @@ locals {
   codebuild_project_role = "${var.env}-${var.project}-codebuild-project-role"
   codebuild_batch_project_role = "${var.env}-${var.project}-codebuild-batch-project-role"
   codebuild_batch_build_policy = "${var.env}-${var.project}-codebuild-batch-build-policy"
+  codebuild_batch_ecr_policy   = "${var.env}-${var.project}-codebuild-batch-ecr-policy"
   buildprojec_name       = "${var.env}-${var.project}-buildproject"
   batch_buildprojec_name = "${var.env}-${var.project}-batch-buildproject"
 }
@@ -27,6 +28,11 @@ resource "aws_iam_policy" "codebuild_build_policy" {
     BUILDPROJECT_NAME = "${aws_codebuild_project.app.name}"
     S3_BUCKET_ARN    = aws_s3_bucket.pipeline.arn
   })
+}
+
+resource "aws_iam_role_policy_attachment" "codebuild_build_policy_attach" {
+  role       = aws_iam_role.codebuild_role.name
+  policy_arn = aws_iam_policy.codebuild_build_policy.arn
 }
 
 resource "aws_iam_policy" "codebuild_ecr_policy" {
@@ -66,6 +72,19 @@ resource "aws_iam_policy" "codebuild_batch_build_policy" {
 resource "aws_iam_role_policy_attachment" "codebuild_batch_build_policy_attach" {
   role       = aws_iam_role.codebuild_batch_role.name
   policy_arn = aws_iam_policy.codebuild_batch_build_policy.arn
+}
+
+resource "aws_iam_policy" "codebuild_batch_ecr_policy" {
+  name = local.codebuild_batch_ecr_policy
+  policy = templatefile("./file/codebuild_ecr_policy.json.tpl", {
+    AWS_ACCOUNT_ID  = data.aws_caller_identity.current.account_id
+    IMAGE_REPO_NAME = var.batch_image_repo_name
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "codebuild_batch_ecr_policy_attach" {
+  role       = aws_iam_role.codebuild_batch_role.name
+  policy_arn = aws_iam_policy.codebuild_batch_ecr_policy.arn
 }
 
 # BuildProject
