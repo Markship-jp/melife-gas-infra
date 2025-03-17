@@ -83,7 +83,7 @@ resource "aws_ecs_task_definition" "main" {
         },
         {
           name      = "ZIPCODE_API_KEY"
-          valueFrom = "${local.parameterstore_arn}/ZIPCODE_APIKEY"
+          valueFrom = "${local.parameterstore_arn}/ZIPCODE_API_KEY"
         },
         {
           name      = "PAYGENT_MERCHANT_ID"
@@ -152,10 +152,6 @@ resource "aws_ecs_task_definition" "main" {
         {
           name      = "KUMO_TENANT_ID"
           valueFrom = "${local.parameterstore_arn}/KUMO_TENANT_ID"
-        },
-        {
-          name      = "KUMO_ID_CODE"
-          valueFrom = "${local.parameterstore_arn}/KUMO_ID_CODE"
         }
       ]
       logConfiguration = {
@@ -166,9 +162,15 @@ resource "aws_ecs_task_definition" "main" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-
     }
   ])
+
+  # 初期構築のみterraformで行う
+  lifecycle {
+    ignore_changes = [
+      container_definitions
+    ]
+  }
 }
 
 # ECS Service

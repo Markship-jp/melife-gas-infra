@@ -142,9 +142,14 @@ resource "aws_ecs_task_definition" "main" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-
-    }
+    }  
   ])
+  # 初期構築のみterraformで行う
+  lifecycle {
+    ignore_changes = [
+      container_definitions
+    ]
+  }
 }
 
 # ECS Service
