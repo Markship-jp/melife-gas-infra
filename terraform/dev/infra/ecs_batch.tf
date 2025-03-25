@@ -38,7 +38,8 @@ resource "aws_ecs_task_definition" "batch" {
       name      = local.batch_container_name
       image     = local.batch_container_image_uri
       essential = true
-      command   = ["node", "./dist/services/src/cli.js", "hello-world"]
+      entrypoint = ["/usr/local/bin/node"]
+      command    = ["./dist/services/src/cli.js", "hello-world"]
       secrets = [
         {
           name      = "DATABASE_URL"
@@ -331,7 +332,7 @@ resource "aws_scheduler_schedule" "batch_daily" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 12 * * ? *)" # 毎日午後12時0分（日本時間）に実行
+  schedule_expression = "cron(26 22 * * ? *)" # 毎日午後12時0分（日本時間）に実行
   schedule_expression_timezone = "Asia/Tokyo"
   state = "ENABLED"
   target {
