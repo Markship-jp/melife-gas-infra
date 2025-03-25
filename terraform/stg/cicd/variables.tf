@@ -14,6 +14,10 @@ variable "github_repository_id" {
   default = "acomic/city-gas"
 }
 
+# -----------------------------
+# App
+# ----------------------------- 
+
 variable "container_name" {
   description = "Container name"
   type        = string
@@ -43,3 +47,25 @@ variable "ecs_service_name" {
   type        = string
   default     = "stg-melife-gas-ecs-service"
 }
+
+# -----------------------------
+# Batch
+# ----------------------------- 
+variable "batch_container_name" {
+  description = "Container name"
+  type        = string
+  default = "stg-melife-gas-batch-container"
+}
+
+variable "batch_image_repo_name" {
+  description = "ECR Repository Name"
+  type        = string
+  default = "stg-melife-gas-batch-ecr-repository"
+}
+
+variable "batch_branch_name" {
+  description = "Branch name"
+  type        = string
+  default = "staging"
+} 
+
