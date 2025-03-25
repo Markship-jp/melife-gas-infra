@@ -4,9 +4,3 @@ data "aws_caller_identity" "current" {}
 data "aws_canonical_user_id" "current" {}
 # Current Region
 data "aws_region" "current" {}
-data "aws_vpc" "main" {
-  filter {
-    name   = "tag:Name"
-    values = ["${var.env}-${var.project}-vpc"]
-  }
-}
