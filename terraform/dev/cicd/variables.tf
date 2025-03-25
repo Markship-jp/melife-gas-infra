@@ -65,6 +65,6 @@ variable "batch_image_repo_name" {
 variable "batch_branch_name" {
   description = "Branch name"
   type        = string
-  default = "develop-sprint-5"
+  default = "develop"
 } 
 

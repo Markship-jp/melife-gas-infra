@@ -145,7 +145,7 @@ resource "aws_codepipeline" "batch_app_pipeline" {
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.github.arn
         FullRepositoryId = var.github_repository_id
-        BranchName       = var.branch_name
+        BranchName       = var.batch_branch_name
       }
     }
   }
