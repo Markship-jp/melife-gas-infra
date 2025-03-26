@@ -6,7 +6,7 @@ locals {
   memory                         = 2048
   container_name                 = "${var.env}-${var.project}-ecs-container"
   ecs_service_name               = "${var.env}-${var.project}-ecs-service"
-  desired_count                  = 0
+  desired_count                  = 2
   max_count                      = 2
   min_count                      = 2
   ecs_task_role                  = "${var.env}-${var.project}-ecs-task-role"
