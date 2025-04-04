@@ -270,7 +270,9 @@ resource "aws_iam_policy" "ecs_exec_policy" {
           "ssmmessages:CreateControlChannel",
           "ssmmessages:CreateDataChannel",
           "ssmmessages:OpenControlChannel",
-          "ssmmessages:OpenDataChannel"
+          "ssmmessages:OpenDataChannel",
+          "logs:DescribeLogStreams",
+          "logs:DescribeLogGroups",
         ],
         Resource = "*"
       }
