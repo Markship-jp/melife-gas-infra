@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'GuardDuty Configuration'
+
+Resources:
+  GuardDutyDetector:
+    Type: AWS::GuardDuty::Detector
+    Properties:
+      Enable: true
+      FindingPublishingFrequency: "SIX_HOURS"
+      Features:
+        - Name: RUNTIME_MONITORING
+          Status: ENABLED
+          AdditionalConfiguration:
+          - Name: ECS_FARGATE_AGENT_MANAGEMENT
+            Status: ENABLED
+          - Name: EKS_ADDON_MANAGEMENT
+            Status: DISABLED
+          - Name: EC2_AGENT_MANAGEMENT
+            Status: DISABLED
+        - Name: RDS_LOGIN_EVENTS
+          Status: ENABLED
+        - Name: S3_DATA_EVENTS
+          Status: DISABLED
+        - Name: EKS_AUDIT_LOGS
+          Status: DISABLED
+        - Name: EBS_MALWARE_PROTECTION
+          Status: DISABLED
+        - Name: LAMBDA_NETWORK_LOGS
+          Status: DISABLED
+      Tags:
+        - Key: env
+          Value: "prd"
+        - Key: managed_by
+          Value: "terraform"
