@@ -47,6 +47,12 @@ terraform/
 - インフラリソース: terraform.tfstate
 - CI/CDリソース: cicd/terraform.tfstate
 
+## CloudFormationテンプレートを利用したリソース管理
+
+Terraformのネイティブリソースではなく、CloudFormationテンプレートをTerraformからラップして管理しているリソースは以下の通りである：
+
+- **GuardDuty**: Amazon GuardDutyの一部機能はTerraformで直接サポートされていないため、CloudFormationテンプレートを使用して設定
+
 ## コンソールから構築したもの
 
 Terraformで管理していない、AWSコンソールから手動で構築・設定したリソースは以下の通りである：
@@ -55,7 +61,7 @@ Terraformで管理していない、AWSコンソールから手動で構築・�
 - **SESのSMTPユーザーの作成**: メール送信のためのSMTPユーザーはコンソールから手動で作成
 - **IAMユーザーの作成**: 開発者用およびCI/CD用のIAMユーザー
 - **GithubとCodepipelineの接続**: CodeStarConnectionsの接続承認プロセス
-- **パラメータストアの値設定**: パラメータストアの枠はTerraformで作成しているが、実際の値はコンソールから手動で設定する必要がある
+- **パラメータストアの値設定**: SystemsManagerパラメータストアの枠はTerraformで作成しているが、実際の値はコンソールから手動で設定する必要がある
 
 ## AWS認証情報の管理
 
