@@ -7,6 +7,7 @@ locals {
   s3_name_storage     = "${var.env}-${var.project}-storage"
   s3_name_waf_logs = "aws-waf-logs-${var.env}-${var.project}"
   s3_name_cloudfront_access_logs = "${var.env}-${var.project}-cloudfront-access-logs"
+  s3_name_cloudtrail_bucket = "${var.env}-${var.project}-cloudtrail-bucket"
 }
 
 # ------------------------------------
@@ -284,4 +285,107 @@ resource "aws_s3_bucket_versioning" "storage" {
   versioning_configuration {
     status = "Enabled"
   }
+}
+
+# ------------------------------------
+# CloudTrailログ格納用バケット
+# ------------------------------------
+
+resource "aws_s3_bucket" "cloudtrail_bucket" {
+  bucket = local.s3_name_cloudtrail_bucket
+  tags = {
+    Name = local.s3_name_cloudtrail_bucket
+  }
+}
+
+# パブリックブロックアクセス設定
+
+resource "aws_s3_bucket_public_access_block" "cloudtrail_bucket" {
+  bucket                  = aws_s3_bucket.cloudtrail_bucket.id
+  block_public_acls       = true  
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+} 
+
+# 暗号化設定
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_bucket" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# ACL無効化
+resource "aws_s3_bucket_ownership_controls" "cloudtrail_bucket" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.bucket
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+} 
+
+# バージョニング有効化
+resource "aws_s3_bucket_versioning" "cloudtrail_bucket" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+} 
+
+# ライフサイクル設定
+resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_bucket" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.bucket
+
+  rule {
+    status = "Enabled"
+    id     = local.s3_name_lifecycle_rule
+    transition {
+      days          = 60
+      storage_class = "STANDARD_IA"
+    }
+    expiration {
+      days = 365
+    }
+  }
+}
+
+# CloudTrail用のS3バケットポリシー
+data "aws_iam_policy_document" "cloudtrail_bucket" {
+  version = "2012-10-17"
+  statement {
+    sid    = "AWSCloudTrailAclCheck"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions   = ["s3:GetBucketAcl"]
+    resources = [aws_s3_bucket.cloudtrail_bucket.arn]
+  }
+
+  statement {
+    sid    = "AWSCloudTrailWrite"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.cloudtrail_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "cloudtrail_bucket" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+  policy = data.aws_iam_policy_document.cloudtrail_bucket.json
 }
