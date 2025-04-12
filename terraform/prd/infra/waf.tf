@@ -43,13 +43,57 @@ resource "aws_wafv2_web_acl" "cloudfront" {
   scope    = "CLOUDFRONT" # ALB用には "REGIONAL" を使用。CloudFront用には "CLOUDFRONT" を使用。
 
   default_action {
-    allow {}
+    block {}
+  }
+
+  # ホワイトリストルール
+  rule {
+    name     = "ALLOWED_IPS"
+    priority = 0
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.cloudfront_allowed_ips.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "ALLOWED_IPS"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  # メンテナンスルール
+  rule {
+    name     = "MAINTENANCE"
+    priority = 1
+
+    statement {
+      rule_group_reference_statement {
+        arn = aws_wafv2_rule_group.cloudfront_maintenance.arn
+      }
+    }
+
+    override_action {
+      none {}
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "MAINTENANCE"
+      sampled_requests_enabled   = true
+    }
   }
 
   # コアルールセット（CRS）マネージドルールグループ
   rule {
     name     = "AWSManagedRulesCommonRuleSet"
-    priority = 0
+    priority = 2
 
     override_action {
       none {}
@@ -72,7 +116,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
   # 管理者保護マネージドルールグループ
   rule {
     name     = "AWSManagedRulesAdminProtectionRuleSet"
-    priority = 1
+    priority = 3
 
     override_action {
       none {}
@@ -95,7 +139,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
   # 既知の不正な入力マネージドルールグループ
   rule {
     name     = "AWSManagedRulesKnownBadInputsRuleSet"
-    priority = 2
+    priority = 4
 
     override_action {
       none {}
@@ -118,7 +162,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
   # SQL データベースマネージドルールグループ
   rule {
     name     = "AWSManagedRulesSQLiRuleSet"
-    priority = 3
+    priority = 5
 
     override_action {
       none {}
@@ -157,27 +201,6 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "AWSManagedRulesAmazonIpReputationList"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  rule {
-    name     = "MAINTENANCE"
-    priority = 7
-
-    statement {
-      rule_group_reference_statement {
-        arn = aws_wafv2_rule_group.cloudfront_maintenance.arn
-      }
-    }
-
-    override_action {
-      none {}
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "MAINTENANCE"
       sampled_requests_enabled   = true
     }
   }
