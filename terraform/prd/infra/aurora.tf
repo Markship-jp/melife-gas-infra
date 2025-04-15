@@ -99,6 +99,7 @@ resource "aws_rds_cluster" "aurora_cluster" {
   database_name      = local.database_name
   engine             = "aurora-mysql"
   backup_retention_period         = 3
+  preferred_backup_window         = "18:00-19:00"
   master_username                 = local.aurora_admin_username
   engine_version                  = "8.0.mysql_aurora.3.08.0"
   preferred_maintenance_window    = "sat:15:00-sat:15:30"
