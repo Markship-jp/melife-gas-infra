@@ -13,7 +13,7 @@ locals {
 # -----------------------------
 # Budgetsへの許可
 resource "aws_sns_topic_policy" "jira_sns_policy" {
-  arn = "arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"
+  arn = aws_sns_topic.jira_cloudwatch.arn
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -23,7 +23,7 @@ resource "aws_sns_topic_policy" "jira_sns_policy" {
           Service = "budgets.amazonaws.com"
         },
         Action   = "sns:Publish",
-        Resource = "arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"
+        Resource = aws_sns_topic.jira_cloudwatch.arn
       }
     ]
   })
@@ -277,5 +277,5 @@ resource "aws_cloudwatch_metric_alarm" "log" {
 
   insufficient_data_actions = []
 
-  alarm_actions = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"]
+  alarm_actions = [aws_sns_topic.jira_cloudwatch.arn]
 }
