@@ -72,20 +72,20 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs_role_attachment" {
 # SNS 
 # -----------------------------
 # JIRA連携用のSNSトピック(Cloudwatch連携)
-#resource "aws_sns_topic" "jira_cloudwatch" {
-#  name = "jira_service_management_cloudwatch"
-#}
+resource "aws_sns_topic" "jira_cloudwatch" {
+  name = "jira_service_management_cloudwatch"
+}
 
 # JIRA連携用のSNSトピック(SNS連携)
 #resource "aws_sns_topic" "jira_sns" {
 #  name = "jira_service_management_sns"
 #}
 
-#resource "aws_sns_topic_subscription" "jira_subscription_cloudwatch" {
-#  topic_arn = aws_sns_topic.jira_cloudwatch.arn
-#  protocol  = "https"
-#  endpoint  = data.aws_ssm_parameter.jira_cloudwatch.value
-#}
+resource "aws_sns_topic_subscription" "jira_subscription_cloudwatch" {
+  topic_arn = aws_sns_topic.jira_cloudwatch.arn
+  protocol  = "https"
+  endpoint  = var.jira_endpoint_cloudwatch
+}
 
 #resource "aws_sns_topic_subscription" "jira_subscription_sns" {
 #  topic_arn = aws_sns_topic.jira_sns.arn
@@ -108,7 +108,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors CPU usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
     ServiceName = aws_ecs_service.main.name
@@ -126,7 +126,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors Memory usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
     ServiceName = aws_ecs_service.main.name
@@ -144,7 +144,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors CPU usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     DBClusterIdentifier = aws_rds_cluster.aurora_cluster.cluster_identifier
   }
@@ -162,7 +162,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
 #  statistic           = "Average"
 #  threshold           = 10
 #  alarm_description   = "This metric monitors 5xxErrorRate for CloudFront"
-#  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+#  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
 #  dimensions = {
 #    DistributionId = aws_cloudfront_distribution.distribution.id
 #    Region = "Global"
@@ -181,7 +181,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_5xxError" {
   statistic           = "Sum"
   threshold           = 30
   alarm_description   = "This metric monitors 5xxErrorCount for ALB"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -199,7 +199,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_TargetResponseTime" {
   statistic           = "Average"
   threshold           = 10
   alarm_description   = "This metric monitors response time for ALB Target group"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -217,7 +217,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_UnHealthyHostCount" {
   statistic           = "Sum"
   threshold           = 1
   alarm_description   = "This metric monitors unhealty condition for ALB Target group"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -240,7 +240,7 @@ resource "aws_budgets_budget" "account" {
     threshold                 = 100
     threshold_type            = "PERCENTAGE"
     notification_type         = "FORECASTED"
-    subscriber_sns_topic_arns = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+    subscriber_sns_topic_arns = [aws_sns_topic.jira_cloudwatch.arn]
   }
 }
 
