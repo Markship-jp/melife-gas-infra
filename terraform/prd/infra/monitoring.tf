@@ -29,6 +29,24 @@ resource "aws_sns_topic_policy" "jira_sns_policy" {
   })
 }
 
+# EventBridgeへの許可
+resource "aws_sns_topic_policy" "jira_sns_policy_event" {
+  arn = aws_sns_topic.jira_eventbridge.arn
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.jira_eventbridge.arn
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "cloudwatch_logs_role" {
   name = "cloudwatch_logs_role"
 
@@ -71,27 +89,26 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs_role_attachment" {
 # -----------------------------
 # SNS 
 # -----------------------------
-# JIRA連携用のSNSトピック(Cloudwatch連携)
+# JIRA連携用のSNSトピック/サブスクリプション(Cloudwatch連携)
 resource "aws_sns_topic" "jira_cloudwatch" {
   name = "jira_service_management_cloudwatch"
 }
 
-# JIRA連携用のSNSトピック(SNS連携)
-#resource "aws_sns_topic" "jira_sns" {
-#  name = "jira_service_management_sns"
-#}
-
-resource "aws_sns_topic_subscription" "jira_subscription_cloudwatch" {
+resource "aws_sns_topic_subscription" "jira_cloudwatch" {
   topic_arn = aws_sns_topic.jira_cloudwatch.arn
   protocol  = "https"
   endpoint  = var.jira_endpoint_cloudwatch
 }
 
-#resource "aws_sns_topic_subscription" "jira_subscription_sns" {
-#  topic_arn = aws_sns_topic.jira_sns.arn
-#  protocol  = "https"
-#  endpoint  = data.aws_ssm_parameter.jira_sns.value
-#}
+# JIRA連携用のSNSトピック/サブスクリプション(EventBridge連携)
+resource "aws_sns_topic" "jira_eventbridge" {
+  name = "jira_service_management_eventbridge"
+}
+resource "aws_sns_topic_subscription" "jira_eventbridge" {
+  topic_arn = aws_sns_topic.jira_eventbridge.arn
+  protocol  = "https"
+  endpoint  = var.jira_endpoint_eventbridge
+}
 
 # -----------------------------
 # Cloudwatch 
