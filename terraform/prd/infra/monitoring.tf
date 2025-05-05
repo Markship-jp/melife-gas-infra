@@ -231,7 +231,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_UnHealthyHostCount" {
 resource "aws_budgets_budget" "account" {
   name         = "budget-account"
   budget_type  = "COST"
-  limit_amount = "400"
+  limit_amount = "500"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
