@@ -43,3 +43,4 @@ variable "availability_zones" {
 
 # Endpoints
 variable jira_endpoint_cloudwatch {}
+variable jira_endpoint_eventbridge {}
