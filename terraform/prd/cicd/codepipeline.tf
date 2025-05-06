@@ -103,6 +103,22 @@ resource "aws_codepipeline" "my_app_pipeline" {
   }
 
   stage {
+    name = "Approval"
+
+    action {
+      name     = "Approval"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "Manual"
+      version  = "1"
+
+      configuration = {
+        CustomData = "本番環境へのデプロイを承認してください。"
+      }
+    }
+  }
+
+  stage {
     name = "Deploy"
 
     action {
@@ -164,6 +180,41 @@ resource "aws_codepipeline" "batch_app_pipeline" {
 
       configuration = {
         ProjectName = local.batch_buildprojec_name
+      }
+    }
+  }
+
+  stage {
+    name = "Approval"
+
+    action {
+      name     = "Approval"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "Manual"
+      version  = "1"
+
+      configuration = {
+        CustomData = "バッチ処理の本番環境へのデプロイを承認してください。"
+      }
+    }
+  }
+
+  stage {
+    name = "Deploy"
+
+    action {
+      name            = "Deploy"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "ECS"
+      version         = "1"
+      input_artifacts = ["build_output"]
+
+      configuration = {
+        ClusterName = var.ecs_cluster_name
+        ServiceName = var.ecs_service_name
+        FileName    = "imagedefinitions.json"
       }
     }
   }
