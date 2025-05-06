@@ -40,3 +40,7 @@ variable "availability_zones" {
     az-1c = "ap-northeast-1c"
   }
 }
+
+# Endpoints
+variable jira_endpoint_cloudwatch {}
+variable jira_endpoint_eventbridge {}

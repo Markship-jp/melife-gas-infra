@@ -13,7 +13,7 @@ locals {
 # -----------------------------
 # Budgetsへの許可
 resource "aws_sns_topic_policy" "jira_sns_policy" {
-  arn = "arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"
+  arn = aws_sns_topic.jira_cloudwatch.arn
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -23,7 +23,25 @@ resource "aws_sns_topic_policy" "jira_sns_policy" {
           Service = "budgets.amazonaws.com"
         },
         Action   = "sns:Publish",
-        Resource = "arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"
+        Resource = aws_sns_topic.jira_cloudwatch.arn
+      }
+    ]
+  })
+}
+
+# EventBridgeへの許可
+resource "aws_sns_topic_policy" "jira_sns_policy_event" {
+  arn = aws_sns_topic.jira_eventbridge.arn
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.jira_eventbridge.arn
       }
     ]
   })
@@ -71,27 +89,26 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs_role_attachment" {
 # -----------------------------
 # SNS 
 # -----------------------------
-# JIRA連携用のSNSトピック(Cloudwatch連携)
-#resource "aws_sns_topic" "jira_cloudwatch" {
-#  name = "jira_service_management_cloudwatch"
-#}
+# JIRA連携用のSNSトピック/サブスクリプション(Cloudwatch連携)
+resource "aws_sns_topic" "jira_cloudwatch" {
+  name = "jira_service_management_cloudwatch"
+}
 
-# JIRA連携用のSNSトピック(SNS連携)
-#resource "aws_sns_topic" "jira_sns" {
-#  name = "jira_service_management_sns"
-#}
+resource "aws_sns_topic_subscription" "jira_cloudwatch" {
+  topic_arn = aws_sns_topic.jira_cloudwatch.arn
+  protocol  = "https"
+  endpoint  = var.jira_endpoint_cloudwatch
+}
 
-#resource "aws_sns_topic_subscription" "jira_subscription_cloudwatch" {
-#  topic_arn = aws_sns_topic.jira_cloudwatch.arn
-#  protocol  = "https"
-#  endpoint  = data.aws_ssm_parameter.jira_cloudwatch.value
-#}
-
-#resource "aws_sns_topic_subscription" "jira_subscription_sns" {
-#  topic_arn = aws_sns_topic.jira_sns.arn
-#  protocol  = "https"
-#  endpoint  = data.aws_ssm_parameter.jira_sns.value
-#}
+# JIRA連携用のSNSトピック/サブスクリプション(EventBridge連携)
+resource "aws_sns_topic" "jira_eventbridge" {
+  name = "jira_service_management_eventbridge"
+}
+resource "aws_sns_topic_subscription" "jira_eventbridge" {
+  topic_arn = aws_sns_topic.jira_eventbridge.arn
+  protocol  = "https"
+  endpoint  = var.jira_endpoint_eventbridge
+}
 
 # -----------------------------
 # Cloudwatch 
@@ -108,7 +125,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors CPU usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
     ServiceName = aws_ecs_service.main.name
@@ -126,7 +143,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors Memory usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     ClusterName = aws_ecs_cluster.main.name
     ServiceName = aws_ecs_service.main.name
@@ -144,7 +161,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
   statistic           = "Average"
   threshold           = 90
   alarm_description   = "This metric monitors CPU usage"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     DBClusterIdentifier = aws_rds_cluster.aurora_cluster.cluster_identifier
   }
@@ -162,7 +179,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
 #  statistic           = "Average"
 #  threshold           = 10
 #  alarm_description   = "This metric monitors 5xxErrorRate for CloudFront"
-#  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+#  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
 #  dimensions = {
 #    DistributionId = aws_cloudfront_distribution.distribution.id
 #    Region = "Global"
@@ -181,7 +198,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_5xxError" {
   statistic           = "Sum"
   threshold           = 30
   alarm_description   = "This metric monitors 5xxErrorCount for ALB"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -199,7 +216,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_TargetResponseTime" {
   statistic           = "Average"
   threshold           = 10
   alarm_description   = "This metric monitors response time for ALB Target group"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -217,7 +234,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_UnHealthyHostCount" {
   statistic           = "Sum"
   threshold           = 1
   alarm_description   = "This metric monitors unhealty condition for ALB Target group"
-  alarm_actions       = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+  alarm_actions       = [aws_sns_topic.jira_cloudwatch.arn]
   dimensions = {
     LoadBalancer = aws_lb.main.arn_suffix
     TargetGroup  = aws_lb_target_group.main.arn_suffix
@@ -231,7 +248,7 @@ resource "aws_cloudwatch_metric_alarm" "lb_UnHealthyHostCount" {
 resource "aws_budgets_budget" "account" {
   name         = "budget-account"
   budget_type  = "COST"
-  limit_amount = "400"
+  limit_amount = "500"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
@@ -240,7 +257,7 @@ resource "aws_budgets_budget" "account" {
     threshold                 = 100
     threshold_type            = "PERCENTAGE"
     notification_type         = "FORECASTED"
-    subscriber_sns_topic_arns = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"] #後でJira連携に変える
+    subscriber_sns_topic_arns = [aws_sns_topic.jira_cloudwatch.arn]
   }
 }
 
@@ -277,5 +294,5 @@ resource "aws_cloudwatch_metric_alarm" "log" {
 
   insufficient_data_actions = []
 
-  alarm_actions = ["arn:aws:sns:ap-northeast-1:390402552438:tmp_mail"]
+  alarm_actions = [aws_sns_topic.jira_cloudwatch.arn]
 }
