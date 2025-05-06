@@ -2,9 +2,11 @@ locals {
   ecs_cluster_name               = "${var.env}-${var.project}-ecs-cluster"
   container_image_uri            = "${aws_ecr_repository.main.repository_url}:dev-melife-gas-202501_28"
   task_definition_name           = "${var.env}-${var.project}-ecs-definition"
+  migration_task_definition_name = "${var.env}-${var.project}-migration-definition"
   cpu                            = 1024
   memory                         = 2048
   container_name                 = "${var.env}-${var.project}-ecs-container"
+  migration_container_name       = "${var.env}-${var.project}-migration-container"
   ecs_service_name               = "${var.env}-${var.project}-ecs-service"
   desired_count                  = 1
   max_count                      = 1
@@ -142,7 +144,7 @@ resource "aws_ecs_task_definition" "main" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-    }  
+    }
   ])
   # 初期構築のみterraformで行う
   lifecycle {
@@ -338,6 +340,158 @@ resource "aws_iam_role_policy_attachment" "ecs_task_policy" {
 resource "aws_iam_role_policy_attachment" "ecs_task_ses_policy" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+}
+
+# マイグレーション用 ECS Task Definition
+resource "aws_ecs_task_definition" "migration" {
+  family                   = local.migration_task_definition_name
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = local.cpu
+  memory                   = local.memory
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  skip_destroy             = true
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "ARM64"
+  }
+  container_definitions = jsonencode([
+    {
+      name       = local.migration_container_name
+      image      = local.container_image_uri
+      essential  = true
+      entryPoint = ["/bin/sh", "-c"]
+      command    = ["node_modules/.bin/prisma migrate deploy --schema ./services/prisma/schema.prisma"]
+      secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "${local.batch_parameterstore_arn}/DATABASE_URL"
+        },
+        {
+          name      = "AUTH_TOKEN_SECRET"
+          valueFrom = "${local.batch_parameterstore_arn}/AUTH_TOKEN_SECRET"
+        },
+        {
+          name      = "FRONTEND_HOST"
+          valueFrom = "${local.batch_parameterstore_arn}/FRONTEND_HOST"
+        },
+        {
+          name      = "MAIL_HOST"
+          valueFrom = "${local.batch_parameterstore_arn}/MAIL_HOST"
+        },
+        {
+          name      = "MAIL_PORT"
+          valueFrom = "${local.batch_parameterstore_arn}/MAIL_PORT"
+        },
+        {
+          name      = "MAIL_USERNAME"
+          valueFrom = "${local.batch_parameterstore_arn}/MAIL_USERNAME"
+        },
+        {
+          name      = "MAIL_PASSWORD"
+          valueFrom = "${local.batch_parameterstore_arn}/MAIL_PASSWORD"
+        },
+        {
+          name      = "MAIL_FROM_ADDRESS"
+          valueFrom = "${local.batch_parameterstore_arn}/MAIL_FROM_ADDRESS"
+        },
+        {
+          name      = "ZIPCODE_API_KEY"
+          valueFrom = "${local.batch_parameterstore_arn}/ZIPCODE_API_KEY"
+        },
+        {
+          name      = "PAYGENT_MERCHANT_ID"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_MERCHANT_ID"
+        },
+        {
+          name      = "PAYGENT_MERCHANT_NAME"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_MERCHANT_NAME"
+        },
+        {
+          name      = "PAYGENT_HASH_KEY"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_HASH_KEY"
+        },
+        {
+          name      = "PAYGENT_COMPANY_NAME"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_COMPANY_NAME"
+        },
+        {
+          name      = "PAYGENT_LINK_URL"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_LINK_URL"
+        },
+        {
+          name      = "PAYGENT_CONNECT_ID"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_CONNECT_ID"
+        },
+        {
+          name      = "PAYGENT_CONNECT_PASSWORD"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_CONNECT_PASSWORD"
+        },
+        {
+          name      = "PAYGENT_CONNECT_VERSION"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_CONNECT_VERSION"
+        },
+        {
+          name      = "PAYGENT_PFX_PASSWORD"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_PFX_PASSWORD"
+        },
+        {
+          name      = "PAYGENT_PFX_KEY"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_PFX_KEY"
+        },
+        {
+          name      = "PAYGENT_MODULE_CONNECT_URL"
+          valueFrom = "${local.batch_parameterstore_arn}/PAYGENT_MODULE_CONNECT_URL"
+        },
+        {
+          name      = "AWS_DOWNLOAD_BUCKET_NAME"
+          valueFrom = "${local.batch_parameterstore_arn}/AWS_DOWNLOAD_BUCKET_NAME"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_ENDPOINT"
+          valueFrom = "${local.batch_parameterstore_arn}/KUMO_ORDER_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_SYSTEM_ENDPOINT"
+          valueFrom = "${local.batch_parameterstore_arn}/KUMO_SYSTEM_ENDPOINT"
+        },
+        {
+          name      = "KUMO_ORDER_SYSTEM_USERNAME"
+          valueFrom = "${local.batch_parameterstore_arn}/KUMO_ORDER_SYSTEM_USERNAME"
+        },
+        {
+          name      = "KUMO_COMPANY_ID"
+          valueFrom = "${local.batch_parameterstore_arn}/KUMO_COMPANY_ID"
+        },
+        {
+          name      = "KUMO_TENANT_ID"
+          valueFrom = "${local.batch_parameterstore_arn}/KUMO_TENANT_ID"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "ecs-migration"
+        }
+      }
+    }
+  ])
+}
+
+# Output for migration task definition
+output "migration_task_definition" {
+  value = aws_ecs_task_definition.migration.family
+}
+
+output "ecs_security_group_id" {
+  value = aws_security_group.ecs.id
+}
+
+output "private_subnet_ids" {
+  value = "${aws_subnet.private_app_1a.id},${aws_subnet.private_app_1c.id}"
 }
 
 

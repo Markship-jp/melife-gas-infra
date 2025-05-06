@@ -67,4 +67,3 @@ variable "batch_branch_name" {
   type        = string
   default = "develop"
 } 
-
