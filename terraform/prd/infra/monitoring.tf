@@ -11,16 +11,26 @@ locals {
 # -----------------------------
 # Policy
 # -----------------------------
-# Budgetsへの許可
+# BudgetsとCloudWatchへの許可
 resource "aws_sns_topic_policy" "jira_sns_policy" {
   arn = aws_sns_topic.jira_cloudwatch.arn
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
+        Sid    = "AllowBudgetsPublish",
         Effect = "Allow",
         Principal = {
           Service = "budgets.amazonaws.com"
+        },
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.jira_cloudwatch.arn
+      },
+      {
+        Sid    = "AllowCloudWatchPublish",
+        Effect = "Allow",
+        Principal = {
+          Service = "cloudwatch.amazonaws.com"
         },
         Action   = "sns:Publish",
         Resource = aws_sns_topic.jira_cloudwatch.arn
