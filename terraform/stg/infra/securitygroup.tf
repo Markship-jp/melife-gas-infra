@@ -82,6 +82,16 @@ resource "aws_security_group_rule" "db" {
   source_security_group_id = aws_security_group.ecs.id
 }
 
+resource "aws_security_group_rule" "db_batch" {
+  description              = "Permit access from Batch ECS"
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.db.id
+  source_security_group_id = aws_security_group.batch.id
+}
+
 # ALB
 
 resource "aws_security_group" "alb" {
