@@ -97,6 +97,7 @@ resource "aws_wafv2_rule_group" "cloudfront_maintenance" {
   rule {
     name     = "RULE_FOR_MAINTENANCE"
     priority = 0
+    # メンテナンスページ表示用
     action {
       block {
         custom_response {
@@ -105,6 +106,9 @@ resource "aws_wafv2_rule_group" "cloudfront_maintenance" {
         }
       }
     }
+    # action {
+    #   allow {}
+    # }
     statement {
       not_statement {
         statement {
