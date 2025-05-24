@@ -26,7 +26,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
     S3_BUCKET_ARN     = aws_s3_bucket.pipeline.arn
     GITHUB_CONNECTION = aws_codestarconnections_connection.github.arn
     CODEBUILD_ARN     = jsonencode([aws_codebuild_project.app.arn, aws_codebuild_project.migration.arn])
-    BATCH_CODEBUILD_ARN = ""
   })
 }
 
@@ -71,7 +70,6 @@ resource "aws_iam_role_policy" "batch_codepipeline_policy" {
     S3_BUCKET_ARN     = aws_s3_bucket.pipeline.arn
     GITHUB_CONNECTION = aws_codestarconnections_connection.github.arn
     CODEBUILD_ARN     = jsonencode([aws_codebuild_project.batch.arn])
-    BATCH_CODEBUILD_ARN = ""
   })
 }
 
