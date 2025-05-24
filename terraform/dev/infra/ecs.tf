@@ -1,6 +1,6 @@
 locals {
   ecs_cluster_name               = "${var.env}-${var.project}-ecs-cluster"
-  container_image_uri            = "${aws_ecr_repository.main.repository_url}:dev-melife-gas-202501_28"
+  container_image_uri            = "${aws_ecr_repository.main.repository_url}:latest"
   task_definition_name           = "${var.env}-${var.project}-ecs-definition"
   migration_task_definition_name = "${var.env}-${var.project}-migration-definition"
   cpu                            = 1024
@@ -361,8 +361,8 @@ resource "aws_ecs_task_definition" "migration" {
       name       = local.migration_container_name
       image      = local.container_image_uri
       essential  = true
-      entryPoint = ["/bin/sh", "-c"]
-      command    = ["node_modules/.bin/prisma migrate deploy --schema ./services/prisma/schema.prisma"]
+      entryPoint = ["node_modules/.bin/prisma"]
+      command    = ["migrate", "deploy", "--schema", "./services/prisma/schema.prisma"]
       secrets = [
         {
           name      = "DATABASE_URL"
