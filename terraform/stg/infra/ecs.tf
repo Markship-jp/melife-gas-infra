@@ -198,7 +198,7 @@ resource "aws_ecs_service" "main" {
   deployment_maximum_percent         = 200
 
   lifecycle {
-    ignore_changes = [task_definition]
+    ignore_changes = [task_definition,desired_count]
   }
 }
 
