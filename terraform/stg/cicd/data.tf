@@ -4,3 +4,13 @@ data "aws_caller_identity" "current" {}
 data "aws_canonical_user_id" "current" {}
 # Current Region
 data "aws_region" "current" {}
+
+# Get outputs from infra module
+data "terraform_remote_state" "infra" {
+  backend = "s3"
+  config = {
+    bucket = "stg-melife-gas-tfstate"
+    key    = "terraform.tfstate"
+    region = "ap-northeast-1"
+  }
+}

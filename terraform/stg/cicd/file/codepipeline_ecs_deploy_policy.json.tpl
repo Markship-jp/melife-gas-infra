@@ -44,7 +44,7 @@
                 "codebuild:BatchGetBuilds",
                 "codebuild:StartBuild"
             ],
-            "Resource": ["${CODEBUILD_ARN}"],
+            "Resource": ${CODEBUILD_ARN},
             "Effect": "Allow"
         },
         {

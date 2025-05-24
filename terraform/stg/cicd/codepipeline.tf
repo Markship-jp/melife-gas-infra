@@ -25,8 +25,7 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   policy = templatefile("./file/codepipeline_ecs_deploy_policy.json.tpl", {
     S3_BUCKET_ARN     = aws_s3_bucket.pipeline.arn
     GITHUB_CONNECTION = aws_codestarconnections_connection.github.arn
-    CODEBUILD_ARN     = aws_codebuild_project.app.arn
-    BATCH_CODEBUILD_ARN = ""
+    CODEBUILD_ARN     = jsonencode([aws_codebuild_project.app.arn, aws_codebuild_project.migration.arn])
   })
 }
 
@@ -50,8 +49,7 @@ resource "aws_iam_role_policy" "batch_codepipeline_policy" {
   policy = templatefile("./file/codepipeline_ecs_deploy_policy.json.tpl", {
     S3_BUCKET_ARN     = aws_s3_bucket.pipeline.arn
     GITHUB_CONNECTION = aws_codestarconnections_connection.github.arn
-    CODEBUILD_ARN     = aws_codebuild_project.batch.arn
-    BATCH_CODEBUILD_ARN = ""
+    CODEBUILD_ARN     = jsonencode([aws_codebuild_project.batch.arn])
   })
 }
 
@@ -117,6 +115,23 @@ resource "aws_codepipeline" "my_app_pipeline" {
         ClusterName = var.ecs_cluster_name
         ServiceName = var.ecs_service_name
         FileName    = "imagedefinitions.json"
+      }
+    }
+  }
+  
+  stage {
+    name = "Migration"
+
+    action {
+      name            = "RunMigration"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["build_output"]
+      
+      configuration = {
+        ProjectName = aws_codebuild_project.migration.name
       }
     }
   }
