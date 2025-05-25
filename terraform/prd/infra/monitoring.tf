@@ -7,6 +7,7 @@ locals {
     }
   }
   rds_eventsubscription_name = "${var.env}-${var.project}-rds-event-availability"
+  rds_eventsubscription_cluster_name = "${var.env}-${var.project}-rds-event-failover"  
 }
 
 # -----------------------------
@@ -326,5 +327,22 @@ resource "aws_db_event_subscription" "rds_availability_subscription" {
   tags = {
     Name = local.rds_eventsubscription_name
   }  
+}
+
+resource "aws_db_event_subscription" "rds_failover_subscription" {
+  name      = local.rds_eventsubscription_cluster_name
+  sns_topic = aws_sns_topic.jira_eventbridge.arn
+  enabled   = true
+  # クラスターで発生したイベントを監視
+  source_type = "db-cluster"
+  
+  # Failoverイベントカテゴリのみを指定
+  event_categories = [
+    "failover"
+  ]
+
+  tags = {
+    Name = local.rds_eventsubscription_cluster_name
+  }
 }
   
