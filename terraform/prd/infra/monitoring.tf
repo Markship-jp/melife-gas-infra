@@ -6,6 +6,7 @@ locals {
       # log_group = "/aws/ecs/prd-melife-gas"
     }
   }
+  rds_eventsubscription_name = "${var.env}-${var.project}-rds-event-availability"
 }
 
 # -----------------------------
@@ -306,3 +307,24 @@ resource "aws_cloudwatch_metric_alarm" "log" {
 
   alarm_actions = [aws_sns_topic.jira_cloudwatch.arn]
 }
+
+# -----------------------------
+# RDS_Event Subscription
+# -----------------------------
+resource "aws_db_event_subscription" "rds_availability_subscription" {
+  name      = local.rds_eventsubscription_name
+  sns_topic = aws_sns_topic.jira_eventbridge.arn
+  enabled   = true
+  # DB インスタンスのイベントを監視
+  source_type = "db-instance"
+  
+  # Availabilityイベントカテゴリのみを指定
+  event_categories = [
+    "availability"
+  ]
+
+  tags = {
+    Name = local.rds_eventsubscription_name
+  }  
+}
+  
