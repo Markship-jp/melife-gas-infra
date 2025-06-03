@@ -44,7 +44,7 @@ resource "aws_scheduler_schedule" "recovery_authori_monthly" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 2 28 * ? *)" # 毎月28日11時00分（日本時間）に実行
+  schedule_expression = "cron(0 11 28 * ? *)" # 毎月28日11時00分（日本時間）に実行
   schedule_expression_timezone = "Asia/Tokyo"
   state = "ENABLED"
   target {

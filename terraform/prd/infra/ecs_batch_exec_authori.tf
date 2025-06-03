@@ -44,7 +44,7 @@ resource "aws_scheduler_schedule" "exec_authori_monthly" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 2 21 * ? *)" # 毎月21日11時00分（日本時間）に実行
+  schedule_expression = "cron(0 11 21 * ? *)" # 毎月21日11時00分（日本時間）に実行
   schedule_expression_timezone = "Asia/Tokyo"
   state = "ENABLED"
   target {

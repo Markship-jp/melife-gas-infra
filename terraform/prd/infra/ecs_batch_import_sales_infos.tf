@@ -44,7 +44,7 @@ resource "aws_scheduler_schedule" "import_sales_infos_daily" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(0 3 * * ? *)" # 毎日12時00分（日本時間）に実行
+  schedule_expression = "cron(0 12 * * ? *)" # 毎日12時00分（日本時間）に実行
   schedule_expression_timezone = "Asia/Tokyo"
   state = "ENABLED"
   target {
