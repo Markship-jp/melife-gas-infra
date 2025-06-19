@@ -225,6 +225,13 @@ resource "aws_appautoscaling_target" "ecs" {
   resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.main.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+
+  lifecycle {
+    ignore_changes = [
+      min_capacity,
+      max_capacity,
+    ]
+  }  
 }
 
 resource "aws_appautoscaling_policy" "ecs" {
@@ -238,9 +245,14 @@ resource "aws_appautoscaling_policy" "ecs" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
     target_value = 70
-    scale_in_cooldown = 300
-    scale_out_cooldown = 300
+    scale_in_cooldown = 180
+    scale_out_cooldown = 180
     disable_scale_in = false
+  }
+  lifecycle {
+    ignore_changes = [
+      target_tracking_scaling_policy_configuration[0].target_value
+    ]
   }
 }
 
